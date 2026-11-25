@@ -24,7 +24,7 @@ from ._simulation import simulate
 
 
 # -- set typing: --------------------------------------------------------------
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 
 # -- operational class: -------------------------------------------------------
@@ -151,7 +151,7 @@ class FatePerturbationExperiment(ABCParse.ABCParse):
         N: int = 200,
         time_key: str = "t",
         save_simulation: bool = False,
-        save_path: Optional[pathlib.Path] = pathlib.Path("./scdiffeq_simulations"),
+        save_path: Union[str, pathlib.Path] = pathlib.Path("./scdiffeq_simulations"),
         *args,
         **kwargs,
     ) -> None:
@@ -267,9 +267,9 @@ class FatePerturbationExperiment(ABCParse.ABCParse):
         
         if self._save_simulation:
             
-            if not self._save_path.exists():
-                os.mkdir(self._save_path)
-            
+            self._save_path = pathlib.Path(self._save_path)
+            self._save_path.mkdir(parents=True, exist_ok=True)
+
             self.adata_sim_prtb = adata_sim_prtb
             self.adata_sim_ctrl = adata_sim_ctrl
             _genes_ = "_".join(self._genes)

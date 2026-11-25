@@ -222,6 +222,16 @@ def load_model(
     if isinstance(ckpt_path, Checkpoint):
         ckpt_path = ckpt_path.path
 
+    if ckpt_path is None:
+        # -- resolve the checkpoint from project_path | version | epoch
+        loader = ModelLoader(project_path=project_path, version=version)
+        loader_epoch = "last" if epoch is None else epoch
+        loader._epoch = loader_epoch
+        loader._validate_epoch()
+        ckpt_path = loader.ckpt.path
+    else:
+        ckpt_path = pathlib.Path(ckpt_path)
+
     diffeq = load_diffeq(
         ckpt_path=ckpt_path,
         project_path=project_path,
@@ -229,14 +239,13 @@ def load_model(
         epoch=epoch,
     )
 
-    # -- note: if ckpt_path is passed, get: project_path|version|epoch
-    if not ckpt_path is None:
-        project_path = ckpt_path.parent.parent.parent
-        version = int(ckpt_path.parent.parent.name.split("version_")[-1])
-        if ckpt_path.name == "last.ckpt":
-            epoch = "last"
-        else:
-            epoch = int(ckpt_path.name.split("epoch=")[-1].split("-")[0])
+    # -- note: ckpt_path is always resolved above; derive project_path|version|epoch
+    project_path = ckpt_path.parent.parent.parent
+    version = int(ckpt_path.parent.parent.name.split("version_")[-1])
+    if ckpt_path.name == "last.ckpt":
+        epoch = "last"
+    else:
+        epoch = int(ckpt_path.name.split("epoch=")[-1].split("-")[0])
 
     # ----------------------------------------------------------------
 
@@ -257,7 +266,7 @@ def load_model(
         loading_existing=True,
     )
 
-    PREVIOUS_METRICS_PATH = pathlib.Path(project_path).joinpath(
+    PREVIOUS_METRICS_PATH = project_path.joinpath(
         f"version_{version}/metrics.csv"
     )
     PREVIOUS_METRICS = pd.read_csv(PREVIOUS_METRICS_PATH)
