@@ -152,7 +152,7 @@ class Simulation(ABCParse.ABCParse):
             + "-"
             + adata_sim.obs["sim_i"].astype(str)
         )
-        adata_sim.uns["sim_idx"] = self.idx
+        adata_sim.uns["sim_idx"] = self.idx.to_numpy()  # pd.Index can't be written to h5ad
         adata_sim.uns["simulated"] = True
 
         return adata_sim

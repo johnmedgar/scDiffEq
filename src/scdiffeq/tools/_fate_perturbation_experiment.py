@@ -274,9 +274,6 @@ class FatePerturbationExperiment(ABCParse.ABCParse):
             self.adata_sim_ctrl = adata_sim_ctrl
             _genes_ = "_".join(self._genes)
             
-            del self.adata_sim_prtb.uns['sim_idx']
-            del self.adata_sim_ctrl.uns['sim_idx']
-            
             self.adata_sim_prtb.write_h5ad(self._save_path.joinpath(f"adata.{_genes_}.prtb.h5ad"))
             self.adata_sim_ctrl.write_h5ad(self._save_path.joinpath(f"adata.{_genes_}.ctrl.h5ad"))
             logger.info(f"Perturbed simulations saved to: {self._save_path}")

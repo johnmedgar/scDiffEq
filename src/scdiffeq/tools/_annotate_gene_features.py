@@ -41,7 +41,8 @@ class GeneCompatibility(ABCParse.ABCParse):
         return self.adata.var[self._gene_id_key]
 
     def _format_var_names(self):
-        self.adata_sim.uns[self._gene_id_key] = self.var_names
+        # array, not Series: a pd.Series can't be written to h5ad
+        self.adata_sim.uns[self._gene_id_key] = self.var_names.to_numpy()
         if not self._silent:
             logger.info(f"Gene names added to: `adata_sim.uns['{self._gene_id_key}']`")
 

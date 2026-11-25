@@ -23,6 +23,13 @@
   downstream tools that default to `"t"` (`annotate_cell_fate`,
   `final_state_per_simulation`, and the plotting functions).
   `FatePerturbationExperiment` now forwards its `time_key` to `simulate`.
+- Simulated data can be written with `write_h5ad`: `sdq.tl.simulate` stores
+  `adata_sim.uns["sim_idx"]` as a `numpy` array instead of a `pandas.Index`, and
+  `annotate_gene_features` stores `uns["gene_ids"]` as an array instead of a
+  `pandas.Series`; neither pandas type can be serialized. Code that calls Index
+  or Series methods on these entries should wrap them (e.g.
+  `pd.Index(adata_sim.uns["sim_idx"])`). `FatePerturbationExperiment` no longer
+  deletes `sim_idx` before saving its simulations.
 
 ### Observation routing and fate-batch compatibility (#127)
 
