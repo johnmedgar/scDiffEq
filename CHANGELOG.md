@@ -2,6 +2,28 @@
 
 ## Unreleased
 
+### Model loading, simulation and path handling
+
+- `sdq.io.load_model` accepts `str` as well as `pathlib.Path` for `ckpt_path` and
+  `project_path`. It also works when only `project_path`, `version` and `epoch` are
+  given (`epoch` defaults to `"last"`); this previously raised `AttributeError`.
+- `sdq.io.load_model` restores a custom `time_key` that is not auto-detected (for
+  example `"day"`). It was previously lost on reload, and loading failed with
+  `TypeError: only list-like objects are allowed to be passed to isin()` because
+  `t0_idx` was `None`. The key is recovered from the saved `hparams.yaml` and is
+  applied only if the column exists in the `adata` passed in.
+- `FatePerturbationExperiment` accepts `str` for `save_path` and creates missing
+  parent directories.
+- **Behavior change:** `sdq.tl.simulate` now names the time column of the simulated
+  data after `time_key` instead of always using `"t"`. The default for `time_key`
+  is now `None` (previously `"Time point"`): it is inferred from `adata.obs`
+  (`"t"`, `"Time point"`, ...) and falls back to `"t"`. Code that passes a custom
+  `time_key`, or whose `adata` uses a `"Time point"` column, and reads
+  `adata_sim.obs["t"]` must read that key instead. Pass the same `time_key` to
+  downstream tools that default to `"t"` (`annotate_cell_fate`,
+  `final_state_per_simulation`, and the plotting functions).
+  `FatePerturbationExperiment` now forwards its `time_key` to `simulate`.
+
 ### Observation routing and fate-batch compatibility (#127)
 
 - The configured growth-weight column now precedes all auxiliary observations

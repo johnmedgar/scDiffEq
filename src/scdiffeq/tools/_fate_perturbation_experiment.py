@@ -254,14 +254,14 @@ class FatePerturbationExperiment(ABCParse.ABCParse):
             diffeq=self.DiffEq,
             use_key="X_pca_prtb",
             t = self._t_sim,
-#             time_key = self._time_key,
+            time_key = self._time_key,
         )
         adata_sim_ctrl = simulate(
             adata=self.adata_prtb,
             diffeq=self.DiffEq,
             use_key="X_pca_ctrl",
             t = self._t_sim,
-#             time_key = self._time_key,
+            time_key = self._time_key,
         )
         
         

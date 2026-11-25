@@ -22,7 +22,7 @@ class Simulation(ABCParse.ABCParse):
     def __init__(
         self,
         use_key: str = "X_pca",
-        time_key: str = "Time point",
+        time_key: Optional[str] = None,
         N: int = 1,
         device: Optional[torch.device] = autodevice.AutoDevice(),
         *args,
@@ -31,6 +31,11 @@ class Simulation(ABCParse.ABCParse):
         """
         Args:
             use_key (str): description. **Default**: "X_pca"
+
+            time_key (Optional[str]): ``adata.obs`` column holding time. It is read
+                from the input ``adata`` and used to name the time column of the
+                simulated data. If None, it is inferred from ``adata.obs`` and falls
+                back to "t". **Default**: None
 
             N (int): number of trajectories to sample from the model. **Default**: 2000
 
@@ -132,7 +137,9 @@ class Simulation(ABCParse.ABCParse):
             adata_sim (anndata.AnnData)
         """
         adata_sim = anndata.AnnData(Z_hat)
-        adata_sim.obs["t"] = np.repeat(self.t.detach().cpu().numpy(), self._N_CELLS)
+        adata_sim.obs[self._time_key] = np.repeat(
+            self.t.detach().cpu().numpy(), self._N_CELLS
+        )
         adata_sim.obs["z0_idx"] = np.tile(np.tile(self.idx, self._N_STEPS), self._N)
         adata_sim.obs["sim_i"] = np.tile(
             np.arange(self._N).repeat(len(self.idx)), self._N_STEPS
@@ -176,6 +183,12 @@ class Simulation(ABCParse.ABCParse):
 
         self.__update__(locals())
 
+        if getattr(self, "_time_key", None) is None:
+            # imported here: core.configs imports this package at module load.
+            from ..core.configs._configure_time_key import configure_time_key
+
+            self._time_key = configure_time_key(adata=adata)
+
         self._diffeq.to(self._device)
 
         if not t is None:
@@ -190,7 +203,7 @@ def simulate(
     diffeq: lightning.LightningModule,
     idx: Optional[pd.Index] = None,
     use_key: str = "X_pca",
-    time_key: str = "Time point",
+    time_key: Optional[str] = None,
     N: Optional[int] = 1,
     t: Optional[torch.Tensor] = None,
     dt: Optional[float] = 0.1,
@@ -211,8 +224,17 @@ def simulate(
         The differential equation model.
     use_key : str, optional
         adata accession key for the input data. Default is "X_pca".
+    time_key : str, optional
+        ``adata.obs`` column holding time. The simulated data's time column is
+        given the same name. If None, it is inferred from ``adata.obs`` (e.g.
+        "t", "Time point") and falls back to "t". Default is None.
     N : int, optional
-        Number of trajectories to sample from the model. Default is 2000.
+        Number of trajectories to sample from the model. Default is 1.
+    t : torch.Tensor, optional
+        Explicit time grid. If None, a grid spanning the time range of ``adata``
+        is built at step ``dt``.
+    dt : float, optional
+        Step size of the default time grid. Default is 0.1.
     device : torch.device, optional
         Device to run the simulation on. Default is True.
 

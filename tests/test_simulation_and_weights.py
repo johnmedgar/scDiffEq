@@ -173,11 +173,11 @@ def test_simulate_spans_the_full_time_course(time_course):
         N=N,
     )
 
-    t = np.unique(sim.obs["t"])
+    t = np.unique(sim.obs["Time point"])
     assert (t.min(), t.max()) == (2.0, 6.0)
     assert len(t) == 41  # (6 - 2) / 0.1 + 1
     # the terminal state is one row per (progenitor, trajectory)
-    assert (sim.obs["t"] == t.max()).sum() == len(t0_idx) * N
+    assert (sim.obs["Time point"] == t.max()).sum() == len(t0_idx) * N
 
 
 def test_sim_id_survives_indices_of_unequal_length(time_course):
