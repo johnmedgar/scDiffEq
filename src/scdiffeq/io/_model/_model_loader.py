@@ -186,6 +186,21 @@ def load_diffeq(
     return model_loader(epoch=epoch)
 
 
+def _saved_time_key(
+    project_path: Union[pathlib.Path, str], version: int
+) -> Optional[str]:
+    """Recover the time key used in training.
+
+    The checkpoint's hparams do not carry ``time_key``; the resolved value is
+    only logged to ``hparams.yaml`` as ``groupby``.
+    """
+    saved = Version(path=pathlib.Path(project_path).joinpath(f"version_{version}"))
+    hparams = saved.hparams
+    if hparams is None:
+        return None
+    return hparams().get("groupby")
+
+
 def load_model(
     adata: anndata.AnnData,
     ckpt_path: Optional[Union[pathlib.Path, str]] = None,
@@ -256,7 +271,15 @@ def load_model(
     }
 
     # ----------------------------------------------------------------
-    model = scDiffEq(**dict(diffeq.hparams))
+    hparams = dict(diffeq.hparams)
+    if hparams.get("time_key") is None:
+        time_key = _saved_time_key(project_path, version)
+        # -- only restore it if the column exists: time-free models store the
+        # default "t", which is created during training and absent from adata.
+        if time_key in adata.obs.columns:
+            hparams["time_key"] = time_key
+
+    model = scDiffEq(**hparams)
     model._load_version = version
     model.configure_data(adata)
     model.configure_kNN()
