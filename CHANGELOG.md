@@ -30,6 +30,11 @@
   or Series methods on these entries should wrap them (e.g.
   `pd.Index(adata_sim.uns["sim_idx"])`). `FatePerturbationExperiment` no longer
   deletes `sim_idx` before saving its simulations.
+- **Behavior change:** `annotate_cell_fate` stores `adata_sim.uns["fate_counts"]` as
+  a `pandas.DataFrame` (one row per fate, indexed by label, with a `count` column)
+  instead of a dict. Fate labels containing `/` (e.g. `"Mono/Neu"`) previously made
+  `write_h5ad` fail, because dict keys become HDF5 keys. Replace
+  `uns["fate_counts"]["Monocyte"]` with `uns["fate_counts"].loc["Monocyte", "count"]`.
 
 ### Observation routing and fate-batch compatibility (#127)
 

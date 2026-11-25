@@ -51,8 +51,13 @@ class CellFateAnnotation(ABCParse.ABCParse):
     def _count_fates(self) -> None:
         """ """
         fate_obs = self._adata_sim.obs.loc[self._TIME == self._T_MAX]
+        # One row per fate, indexed by label. A dict (or a frame with fates as
+        # columns) would use labels as HDF5 keys, which fail on "/" in write_h5ad.
         self._adata_sim.uns["fate_counts"] = (
-            fate_obs[self._key_added].value_counts().to_dict()
+            fate_obs[self._key_added]
+            .value_counts()
+            .rename_axis(self._key_added)
+            .to_frame("count")
         )
 
         if not self._silent:
